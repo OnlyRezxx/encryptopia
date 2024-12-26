@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Javascript, Python, Java } from "lucide-react";
+import { Code, Terminal, Brackets } from "lucide-react";
 
 interface LanguageSelectorProps {
   value: string;
@@ -17,19 +17,19 @@ const LanguageSelector = ({ value, onChange }: LanguageSelectorProps) => {
         <SelectContent className="bg-navy-light border-mint/20">
           <SelectItem value="javascript">
             <div className="flex items-center gap-2">
-              <Javascript className="w-4 h-4" />
+              <Code className="w-4 h-4" />
               <span>JavaScript</span>
             </div>
           </SelectItem>
           <SelectItem value="python">
             <div className="flex items-center gap-2">
-              <Python className="w-4 h-4" />
+              <Terminal className="w-4 h-4" />
               <span>Python</span>
             </div>
           </SelectItem>
           <SelectItem value="java">
             <div className="flex items-center gap-2">
-              <Java className="w-4 h-4" />
+              <Brackets className="w-4 h-4" />
               <span>Java</span>
             </div>
           </SelectItem>
