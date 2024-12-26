@@ -1,23 +1,33 @@
-import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, AlertTriangle } from "lucide-react";
 import Footer from "@/components/Footer";
 import Instructions from "@/components/Instructions";
 import VerificationDialog from "@/components/VerificationDialog";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import LanguageSelector from "@/components/LanguageSelector";
+import EncryptionMethodSelector from "@/components/EncryptionMethodSelector";
+import LoadingScreen from "@/components/LoadingScreen";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { encryptText, decryptText } from "@/utils/encryption";
 
 const Index = () => {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [method, setMethod] = useState("base64");
-  const [language, setLanguage] = useState("javascript");
   const [showVerification, setShowVerification] = useState(false);
   const [pendingAction, setPendingAction] = useState<'encrypt' | 'decrypt' | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate initial loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleEncryptDecrypt = (action: 'encrypt' | 'decrypt') => {
     if (!input.trim()) {
@@ -37,55 +47,23 @@ const Index = () => {
       performOperation(pendingAction);
       setPendingAction(null);
     }
+    setShowVerification(false);
   };
 
   const performOperation = (action: 'encrypt' | 'decrypt') => {
     try {
-      let result = "";
-      const isEncrypt = action === 'encrypt';
-      
-      switch (method) {
-        case "base64":
-          result = isEncrypt ? btoa(input) : atob(input);
-          break;
-        case "caesar":
-          result = input
-            .split("")
-            .map((char) => {
-              if (char.match(/[a-z]/i)) {
-                const code = char.charCodeAt(0);
-                const isUpperCase = char === char.toUpperCase();
-                const base = isUpperCase ? 65 : 97;
-                const shift = isEncrypt ? 3 : -3;
-                return String.fromCharCode(((code - base + shift + 26) % 26) + base);
-              }
-              return char;
-            })
-            .join("");
-          break;
-        case "url":
-          result = isEncrypt ? encodeURIComponent(input) : decodeURIComponent(input);
-          break;
-        case "rot13":
-          result = input
-            .split("")
-            .map((char) => {
-              if (char.match(/[a-z]/i)) {
-                const code = char.charCodeAt(0);
-                const isUpperCase = char === char.toUpperCase();
-                const base = isUpperCase ? 65 : 97;
-                return String.fromCharCode(((code - base + 13) % 26) + base);
-              }
-              return char;
-            })
-            .join("");
-          break;
-      }
+      const result = action === 'encrypt' 
+        ? encryptText(input, method)
+        : decryptText(input, method);
       setOutput(result);
+      toast({
+        title: `${action === 'encrypt' ? 'Encryption' : 'Decryption'} Successful`,
+        description: "Operation completed successfully",
+      });
     } catch (error) {
       toast({
-        title: `${isEncrypt ? 'Encryption' : 'Decryption'} Error`,
-        description: `Failed to ${isEncrypt ? 'encrypt' : 'decrypt'} the text. Please check your input.`,
+        title: `${action === 'encrypt' ? 'Encryption' : 'Decryption'} Error`,
+        description: `Failed to ${action} the text. Please check your input.`,
         variant: "destructive",
       });
     }
@@ -105,6 +83,10 @@ const Index = () => {
     setPendingAction(null);
   };
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-navy p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -113,23 +95,15 @@ const Index = () => {
           <p className="text-gray-300">Encrypt and decrypt your code using various methods</p>
         </div>
 
-        <div className="grid gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Encryption Method</label>
-            <Select value={method} onValueChange={setMethod}>
-              <SelectTrigger className="bg-navy-light border-mint/20 text-gray-200">
-                <SelectValue placeholder="Select method" />
-              </SelectTrigger>
-              <SelectContent className="bg-navy-light border-mint/20">
-                <SelectItem value="base64">Base64</SelectItem>
-                <SelectItem value="caesar">Caesar Cipher</SelectItem>
-                <SelectItem value="url">URL Encoding</SelectItem>
-                <SelectItem value="rot13">ROT13</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <Alert className="bg-yellow-500/10 border-yellow-500/50 text-yellow-300">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Please ensure your code is functional before encryption. The encryption process may affect code execution if not properly handled.
+          </AlertDescription>
+        </Alert>
 
-          <LanguageSelector value={language} onChange={setLanguage} />
+        <div className="grid gap-6">
+          <EncryptionMethodSelector value={method} onChange={setMethod} />
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Input</label>
@@ -194,7 +168,7 @@ const Index = () => {
         onVerified={handleVerified}
       />
       
-      <WhatsAppButton />
+      <WhatsAppButton phoneNumber="+6282256925572" />
     </div>
   );
 };
