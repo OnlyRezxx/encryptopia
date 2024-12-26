@@ -6,7 +6,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Copy, Trash2 } from "lucide-react";
 import Footer from "@/components/Footer";
 import Instructions from "@/components/Instructions";
-import AntiSpamVerification from "@/components/AntiSpamVerification";
+import VerificationDialog from "@/components/VerificationDialog";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import LanguageSelector from "@/components/LanguageSelector";
 
 const Index = () => {
@@ -14,8 +15,8 @@ const Index = () => {
   const [output, setOutput] = useState("");
   const [method, setMethod] = useState("base64");
   const [language, setLanguage] = useState("javascript");
-  const [isVerified, setIsVerified] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'encrypt' | 'decrypt' | null>(null);
   const { toast } = useToast();
 
   const handleEncryptDecrypt = (action: 'encrypt' | 'decrypt') => {
@@ -28,25 +29,24 @@ const Index = () => {
       return;
     }
     setShowVerification(true);
-    setIsVerified(false);
+    setPendingAction(action);
   };
 
   const handleVerified = (verified: boolean) => {
-    setIsVerified(verified);
-    if (verified) {
-      if (showVerification) {
-        performOperation();
-        setShowVerification(false);
-      }
+    if (verified && pendingAction) {
+      performOperation(pendingAction);
+      setPendingAction(null);
     }
   };
 
-  const performOperation = () => {
+  const performOperation = (action: 'encrypt' | 'decrypt') => {
     try {
       let result = "";
+      const isEncrypt = action === 'encrypt';
+      
       switch (method) {
         case "base64":
-          result = showVerification ? btoa(input) : atob(input);
+          result = isEncrypt ? btoa(input) : atob(input);
           break;
         case "caesar":
           result = input
@@ -56,7 +56,7 @@ const Index = () => {
                 const code = char.charCodeAt(0);
                 const isUpperCase = char === char.toUpperCase();
                 const base = isUpperCase ? 65 : 97;
-                const shift = showVerification ? 3 : -3;
+                const shift = isEncrypt ? 3 : -3;
                 return String.fromCharCode(((code - base + shift + 26) % 26) + base);
               }
               return char;
@@ -64,7 +64,7 @@ const Index = () => {
             .join("");
           break;
         case "url":
-          result = showVerification ? encodeURIComponent(input) : decodeURIComponent(input);
+          result = isEncrypt ? encodeURIComponent(input) : decodeURIComponent(input);
           break;
         case "rot13":
           result = input
@@ -84,8 +84,8 @@ const Index = () => {
       setOutput(result);
     } catch (error) {
       toast({
-        title: `${showVerification ? 'Encryption' : 'Decryption'} Error`,
-        description: `Failed to ${showVerification ? 'encrypt' : 'decrypt'} the text. Please check your input.`,
+        title: `${isEncrypt ? 'Encryption' : 'Decryption'} Error`,
+        description: `Failed to ${isEncrypt ? 'encrypt' : 'decrypt'} the text. Please check your input.`,
         variant: "destructive",
       });
     }
@@ -102,8 +102,7 @@ const Index = () => {
   const handleClear = () => {
     setInput("");
     setOutput("");
-    setIsVerified(false);
-    setShowVerification(false);
+    setPendingAction(null);
   };
 
   return (
@@ -141,12 +140,6 @@ const Index = () => {
               className="h-40 bg-navy-light border-mint/20 text-gray-200 placeholder:text-gray-500"
             />
           </div>
-
-          {showVerification && (
-            <div className="animate-fade-in">
-              <AntiSpamVerification onVerified={handleVerified} />
-            </div>
-          )}
 
           <div className="flex gap-4 justify-center">
             <Button
@@ -194,6 +187,14 @@ const Index = () => {
         <Instructions />
         <Footer />
       </div>
+
+      <VerificationDialog
+        open={showVerification}
+        onOpenChange={setShowVerification}
+        onVerified={handleVerified}
+      />
+      
+      <WhatsAppButton />
     </div>
   );
 };
