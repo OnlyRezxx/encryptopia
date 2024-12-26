@@ -4,87 +4,67 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Copy, Trash2 } from "lucide-react";
-
-const encryptionMethods = {
-  base64: {
-    encrypt: (text: string) => btoa(text),
-    decrypt: (text: string) => atob(text),
-  },
-  caesar: {
-    encrypt: (text: string, shift = 3) => {
-      return text
-        .split("")
-        .map((char) => {
-          if (char.match(/[a-z]/i)) {
-            const code = char.charCodeAt(0);
-            const isUpperCase = char === char.toUpperCase();
-            const base = isUpperCase ? 65 : 97;
-            return String.fromCharCode(((code - base + shift) % 26) + base);
-          }
-          return char;
-        })
-        .join("");
-    },
-    decrypt: (text: string, shift = 3) => {
-      return text
-        .split("")
-        .map((char) => {
-          if (char.match(/[a-z]/i)) {
-            const code = char.charCodeAt(0);
-            const isUpperCase = char === char.toUpperCase();
-            const base = isUpperCase ? 65 : 97;
-            return String.fromCharCode(((code - base - shift + 26) % 26) + base);
-          }
-          return char;
-        })
-        .join("");
-    },
-  },
-  url: {
-    encrypt: (text: string) => encodeURIComponent(text),
-    decrypt: (text: string) => decodeURIComponent(text),
-  },
-  rot13: {
-    encrypt: (text: string) => {
-      return text
-        .split("")
-        .map((char) => {
-          if (char.match(/[a-z]/i)) {
-            const code = char.charCodeAt(0);
-            const isUpperCase = char === char.toUpperCase();
-            const base = isUpperCase ? 65 : 97;
-            return String.fromCharCode(((code - base + 13) % 26) + base);
-          }
-          return char;
-        })
-        .join("");
-    },
-    decrypt: (text: string) => {
-      return text
-        .split("")
-        .map((char) => {
-          if (char.match(/[a-z]/i)) {
-            const code = char.charCodeAt(0);
-            const isUpperCase = char === char.toUpperCase();
-            const base = isUpperCase ? 65 : 97;
-            return String.fromCharCode(((code - base + 13) % 26) + base);
-          }
-          return char;
-        })
-        .join("");
-    },
-  },
-};
+import Footer from "@/components/Footer";
+import Instructions from "@/components/Instructions";
+import AntiSpamVerification from "@/components/AntiSpamVerification";
+import LanguageSelector from "@/components/LanguageSelector";
 
 const Index = () => {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [method, setMethod] = useState("base64");
+  const [language, setLanguage] = useState("javascript");
+  const [isVerified, setIsVerified] = useState(false);
   const { toast } = useToast();
 
   const handleEncrypt = () => {
+    if (!isVerified) {
+      toast({
+        title: "Verification Required",
+        description: "Please complete the anti-spam verification first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const encrypted = encryptionMethods[method as keyof typeof encryptionMethods].encrypt(input);
+      let encrypted = "";
+      switch (method) {
+        case "base64":
+          encrypted = btoa(input);
+          break;
+        case "caesar":
+          encrypted = input
+            .split("")
+            .map((char) => {
+              if (char.match(/[a-z]/i)) {
+                const code = char.charCodeAt(0);
+                const isUpperCase = char === char.toUpperCase();
+                const base = isUpperCase ? 65 : 97;
+                return String.fromCharCode(((code - base + 3) % 26) + base);
+              }
+              return char;
+            })
+            .join("");
+          break;
+        case "url":
+          encrypted = encodeURIComponent(input);
+          break;
+        case "rot13":
+          encrypted = input
+            .split("")
+            .map((char) => {
+              if (char.match(/[a-z]/i)) {
+                const code = char.charCodeAt(0);
+                const isUpperCase = char === char.toUpperCase();
+                const base = isUpperCase ? 65 : 97;
+                return String.fromCharCode(((code - base + 13) % 26) + base);
+              }
+              return char;
+            })
+            .join("");
+          break;
+      }
       setOutput(encrypted);
     } catch (error) {
       toast({
@@ -96,8 +76,53 @@ const Index = () => {
   };
 
   const handleDecrypt = () => {
+    if (!isVerified) {
+      toast({
+        title: "Verification Required",
+        description: "Please complete the anti-spam verification first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const decrypted = encryptionMethods[method as keyof typeof encryptionMethods].decrypt(input);
+      let decrypted = "";
+      switch (method) {
+        case "base64":
+          decrypted = atob(input);
+          break;
+        case "caesar":
+          decrypted = input
+            .split("")
+            .map((char) => {
+              if (char.match(/[a-z]/i)) {
+                const code = char.charCodeAt(0);
+                const isUpperCase = char === char.toUpperCase();
+                const base = isUpperCase ? 65 : 97;
+                return String.fromCharCode(((code - base - 3 + 26) % 26) + base);
+              }
+              return char;
+            })
+            .join("");
+          break;
+        case "url":
+          decrypted = decodeURIComponent(input);
+          break;
+        case "rot13":
+          decrypted = input
+            .split("")
+            .map((char) => {
+              if (char.match(/[a-z]/i)) {
+                const code = char.charCodeAt(0);
+                const isUpperCase = char === char.toUpperCase();
+                const base = isUpperCase ? 65 : 97;
+                return String.fromCharCode(((code - base + 13) % 26) + base);
+              }
+              return char;
+            })
+            .join("");
+          break;
+      }
       setOutput(decrypted);
     } catch (error) {
       toast({
@@ -119,6 +144,7 @@ const Index = () => {
   const handleClear = () => {
     setInput("");
     setOutput("");
+    setIsVerified(false);
   };
 
   return (
@@ -128,6 +154,8 @@ const Index = () => {
           <h1 className="text-4xl font-bold text-mint animate-glow">Code Encryption</h1>
           <p className="text-gray-300">Encrypt and decrypt your code using various methods</p>
         </div>
+
+        <Instructions />
 
         <div className="grid gap-6">
           <div className="space-y-2">
@@ -145,6 +173,8 @@ const Index = () => {
             </Select>
           </div>
 
+          <LanguageSelector value={language} onChange={setLanguage} />
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Input</label>
             <Textarea
@@ -154,6 +184,8 @@ const Index = () => {
               className="h-40 bg-navy-light border-mint/20 text-gray-200 placeholder:text-gray-500"
             />
           </div>
+
+          <AntiSpamVerification onVerified={setIsVerified} />
 
           <div className="flex gap-4 justify-center">
             <Button
@@ -198,9 +230,7 @@ const Index = () => {
           </div>
         </div>
 
-        <footer className="text-center text-gray-500 text-sm">
-          <p>Version 1.0 | Created with ❤️</p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );
