@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Code, Terminal, Brackets } from "lucide-react";
+import { Code, Terminal, Brackets, Hash, FileJson, Database, Globe, Braces, FileType, Binary } from "lucide-react";
 
 interface LanguageSelectorProps {
   value: string;
@@ -31,6 +31,48 @@ const LanguageSelector = ({ value, onChange }: LanguageSelectorProps) => {
             <div className="flex items-center gap-2">
               <Brackets className="w-4 h-4" />
               <span>Java</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="csharp">
+            <div className="flex items-center gap-2">
+              <Hash className="w-4 h-4" />
+              <span>C#</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="php">
+            <div className="flex items-center gap-2">
+              <FileType className="w-4 h-4" />
+              <span>PHP</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="ruby">
+            <div className="flex items-center gap-2">
+              <Binary className="w-4 h-4" />
+              <span>Ruby</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="sql">
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              <span>SQL</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="html">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              <span>HTML</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="json">
+            <div className="flex items-center gap-2">
+              <FileJson className="w-4 h-4" />
+              <span>JSON</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="typescript">
+            <div className="flex items-center gap-2">
+              <Braces className="w-4 h-4" />
+              <span>TypeScript</span>
             </div>
           </SelectItem>
         </SelectContent>

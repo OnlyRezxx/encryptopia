@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,23 @@ interface AntiSpamVerificationProps {
 
 const AntiSpamVerification = ({ onVerified }: AntiSpamVerificationProps) => {
   const [answer, setAnswer] = useState("");
-  const [num1] = useState(() => Math.floor(Math.random() * 10));
-  const [num2] = useState(() => Math.floor(Math.random() * 10));
+  const [num1, setNum1] = useState(0);
+  const [num2, setNum2] = useState(0);
+
+  useEffect(() => {
+    // Generate new random numbers when component mounts
+    setNum1(Math.floor(Math.random() * 10));
+    setNum2(Math.floor(Math.random() * 10));
+  }, []);
 
   const handleVerify = () => {
     const isCorrect = parseInt(answer) === num1 + num2;
     onVerified(isCorrect);
     if (!isCorrect) {
       setAnswer("");
+      // Generate new numbers if answer was incorrect
+      setNum1(Math.floor(Math.random() * 10));
+      setNum2(Math.floor(Math.random() * 10));
     }
   };
 

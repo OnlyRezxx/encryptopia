@@ -15,101 +15,59 @@ const Index = () => {
   const [method, setMethod] = useState("base64");
   const [language, setLanguage] = useState("javascript");
   const [isVerified, setIsVerified] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const { toast } = useToast();
 
-  const handleEncrypt = () => {
-    if (!isVerified) {
+  const handleEncryptDecrypt = (action: 'encrypt' | 'decrypt') => {
+    if (!input.trim()) {
       toast({
-        title: "Verification Required",
-        description: "Please complete the anti-spam verification first.",
+        title: "Input Required",
+        description: "Please enter some text to " + action,
         variant: "destructive",
       });
       return;
     }
+    setShowVerification(true);
+    setIsVerified(false);
+  };
 
-    try {
-      let encrypted = "";
-      switch (method) {
-        case "base64":
-          encrypted = btoa(input);
-          break;
-        case "caesar":
-          encrypted = input
-            .split("")
-            .map((char) => {
-              if (char.match(/[a-z]/i)) {
-                const code = char.charCodeAt(0);
-                const isUpperCase = char === char.toUpperCase();
-                const base = isUpperCase ? 65 : 97;
-                return String.fromCharCode(((code - base + 3) % 26) + base);
-              }
-              return char;
-            })
-            .join("");
-          break;
-        case "url":
-          encrypted = encodeURIComponent(input);
-          break;
-        case "rot13":
-          encrypted = input
-            .split("")
-            .map((char) => {
-              if (char.match(/[a-z]/i)) {
-                const code = char.charCodeAt(0);
-                const isUpperCase = char === char.toUpperCase();
-                const base = isUpperCase ? 65 : 97;
-                return String.fromCharCode(((code - base + 13) % 26) + base);
-              }
-              return char;
-            })
-            .join("");
-          break;
+  const handleVerified = (verified: boolean) => {
+    setIsVerified(verified);
+    if (verified) {
+      if (showVerification) {
+        performOperation();
+        setShowVerification(false);
       }
-      setOutput(encrypted);
-    } catch (error) {
-      toast({
-        title: "Encryption Error",
-        description: "Failed to encrypt the text. Please check your input.",
-        variant: "destructive",
-      });
     }
   };
 
-  const handleDecrypt = () => {
-    if (!isVerified) {
-      toast({
-        title: "Verification Required",
-        description: "Please complete the anti-spam verification first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const performOperation = () => {
     try {
-      let decrypted = "";
+      let result = "";
       switch (method) {
         case "base64":
-          decrypted = atob(input);
+          result = showVerification ? btoa(input) : atob(input);
           break;
         case "caesar":
-          decrypted = input
+          result = input
             .split("")
             .map((char) => {
               if (char.match(/[a-z]/i)) {
                 const code = char.charCodeAt(0);
                 const isUpperCase = char === char.toUpperCase();
                 const base = isUpperCase ? 65 : 97;
-                return String.fromCharCode(((code - base - 3 + 26) % 26) + base);
+                const shift = showVerification ? 3 : -3;
+                return String.fromCharCode(((code - base + shift + 26) % 26) + base);
               }
               return char;
             })
             .join("");
           break;
         case "url":
-          decrypted = decodeURIComponent(input);
+          result = showVerification ? encodeURIComponent(input) : decodeURIComponent(input);
           break;
         case "rot13":
-          decrypted = input
+          result = input
             .split("")
             .map((char) => {
               if (char.match(/[a-z]/i)) {
@@ -123,11 +81,11 @@ const Index = () => {
             .join("");
           break;
       }
-      setOutput(decrypted);
+      setOutput(result);
     } catch (error) {
       toast({
-        title: "Decryption Error",
-        description: "Failed to decrypt the text. Please check your input.",
+        title: `${showVerification ? 'Encryption' : 'Decryption'} Error`,
+        description: `Failed to ${showVerification ? 'encrypt' : 'decrypt'} the text. Please check your input.`,
         variant: "destructive",
       });
     }
@@ -145,6 +103,7 @@ const Index = () => {
     setInput("");
     setOutput("");
     setIsVerified(false);
+    setShowVerification(false);
   };
 
   return (
@@ -154,8 +113,6 @@ const Index = () => {
           <h1 className="text-4xl font-bold text-mint animate-glow">Code Encryption</h1>
           <p className="text-gray-300">Encrypt and decrypt your code using various methods</p>
         </div>
-
-        <Instructions />
 
         <div className="grid gap-6">
           <div className="space-y-2">
@@ -185,17 +142,21 @@ const Index = () => {
             />
           </div>
 
-          <AntiSpamVerification onVerified={setIsVerified} />
+          {showVerification && (
+            <div className="animate-fade-in">
+              <AntiSpamVerification onVerified={handleVerified} />
+            </div>
+          )}
 
           <div className="flex gap-4 justify-center">
             <Button
-              onClick={handleEncrypt}
+              onClick={() => handleEncryptDecrypt('encrypt')}
               className="bg-mint text-navy hover:bg-mint-dark transition-colors"
             >
               Encrypt
             </Button>
             <Button
-              onClick={handleDecrypt}
+              onClick={() => handleEncryptDecrypt('decrypt')}
               className="bg-mint text-navy hover:bg-mint-dark transition-colors"
             >
               Decrypt
@@ -230,6 +191,7 @@ const Index = () => {
           </div>
         </div>
 
+        <Instructions />
         <Footer />
       </div>
     </div>
